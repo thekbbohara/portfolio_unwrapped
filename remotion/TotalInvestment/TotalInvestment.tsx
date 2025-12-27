@@ -50,36 +50,81 @@ export const TotalInvestment: React.FC<z.infer<typeof totalInvestmentSchema>> = 
         maximumFractionDigits: 0,
     }).format(amount).replace("NPR", "NRS");
 
-    // Dynamic Background Pulse
-    const gradientPulse = interpolate(frame, [0, 60, 120], [0.8, 1.2, 0.8], {
-        extrapolateRight: "loop",
-    });
+    // Generate a consistent bullish path for the chart
+    const pathData = `M 0 ${height} L 0 ${height * 0.8} C ${width * 0.2} ${height * 0.8}, ${width * 0.2} ${height * 0.6}, ${width * 0.4} ${height * 0.6} C ${width * 0.6} ${height * 0.6}, ${width * 0.6} ${height * 0.3}, ${width} ${height * 0.2} L ${width} ${height} Z`;
+    const linePathData = `M 0 ${height * 0.8} C ${width * 0.2} ${height * 0.8}, ${width * 0.2} ${height * 0.6}, ${width * 0.4} ${height * 0.6} C ${width * 0.6} ${height * 0.6}, ${width * 0.6} ${height * 0.3}, ${width} ${height * 0.2}`;
+
+    const chartDraw = interpolate(frame, [0, 50], [width, 0], { extrapolateRight: "clamp" });
+    const chartOpacity = interpolate(frame, [0, 20], [0, 0.6]);
 
     return (
         <AbsoluteFill
             style={{
-                backgroundColor: "#000",
+                backgroundColor: "#02040a", // Dark financial blue/black
                 justifyContent: "center",
                 alignItems: "center",
                 overflow: "hidden",
-                opacity, // Apply combined opacity
+                opacity,
             }}
         >
-            {/* 1. Cinematic Background: Moving Light Leaks/Aurora */}
-            {/* Uses a blurred gradient moving slowly */}
+            {/* 1. Share Market Background: Grid */}
             <AbsoluteFill
                 style={{
-                    background: "radial-gradient(circle at center, #1a2a6c, #b21f1f, #fdbb2d)", // Deep Cinematic Gradient
-                    filter: "blur(80px)",
-                    transform: `scale(${gradientPulse * 1.5}) rotate(${frame / 2}deg)`,
+                    backgroundImage: `
+                        linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px)
+                    `,
+                    backgroundSize: "80px 80px",
                     opacity: 0.3,
+                    transform: `perspective(1000px) rotateX(60deg) translateY(${frame * 0.5}px)`, // Moving floor effect
+                    transformOrigin: "bottom",
                 }}
             />
 
-            {/* Dark Overlay to keep text readable */}
-            <AbsoluteFill style={{ background: "rgba(0,0,0,0.6)" }} />
+            {/* 2. Stock Chart Asset (SVG) */}
+            <svg
+                width={width}
+                height={height}
+                style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    opacity: chartOpacity,
+                    zIndex: 0,
+                }}
+            >
+                {/* Gradient Definition */}
+                <defs>
+                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(0, 255, 136, 0.6)" /> {/* Green/Bullish */}
+                        <stop offset="100%" stopColor="rgba(0, 255, 136, 0)" />
+                    </linearGradient>
+                </defs>
 
-            {/* 2. Main Typography Container */}
+                {/* Area Fill */}
+                <path
+                    d={pathData}
+                    fill="url(#chartGradient)"
+                    style={{ opacity: 0.3 }}
+                />
+
+                {/* Line Stroke with Draw Animation */}
+                <path
+                    d={linePathData}
+                    fill="none"
+                    stroke="#00ff88"
+                    strokeWidth="8"
+                    strokeDasharray={width * 2}
+                    strokeDashoffset={chartDraw}
+                    strokeLinecap="round"
+                    style={{ filter: "drop-shadow(0 0 15px rgba(0, 255, 136, 0.6))" }}
+                />
+            </svg>
+
+            {/* Dark Overlay/Vignette */}
+            <AbsoluteFill style={{ background: "radial-gradient(circle, rgba(2,4,10,0.1) 20%, rgba(2,4,10,0.9) 100%)" }} />
+
+            {/* 3. Main Typography Container */}
             <div
                 style={{
                     display: "flex",
@@ -87,7 +132,6 @@ export const TotalInvestment: React.FC<z.infer<typeof totalInvestmentSchema>> = 
                     alignItems: "center",
                     position: "relative",
                     zIndex: 10,
-                    // opacity, // Removed here, applied to container
                     transform: `scale(${scale})`,
                 }}
             >
@@ -97,17 +141,18 @@ export const TotalInvestment: React.FC<z.infer<typeof totalInvestmentSchema>> = 
                         fontSize: 40,
                         fontFamily: "Mona Sans",
                         fontWeight: 600,
-                        color: "rgba(255, 255, 255, 0.6)",
+                        color: "#00ff88", // Green for growth
                         marginBottom: 10,
                         textTransform: "uppercase",
                         letterSpacing: 12,
+                        textShadow: "0 0 20px rgba(0, 255, 136, 0.4)",
                         transform: `translateY(${interpolate(frame, [0, 30], [20, 0], { extrapolateRight: "clamp" })}px)`,
                     }}
                 >
                     Total Investment
                 </div>
 
-                {/* Main Value - Kinetic Typography style */}
+                {/* Main Value */}
                 <div style={{ position: "relative" }}>
                     {/* Glow Layer */}
                     <div
@@ -121,7 +166,7 @@ export const TotalInvestment: React.FC<z.infer<typeof totalInvestmentSchema>> = 
                             fontFamily: "Mona Sans",
                             fontWeight: 900,
                             color: "transparent",
-                            WebkitTextStroke: "2px rgba(255, 215, 0, 0.3)", // Gold stroke glow
+                            WebkitTextStroke: "2px rgba(0, 255, 136, 0.5)", // Green glow
                             filter: "blur(10px)",
                             transform: "scale(1.05)",
                         }}
@@ -136,10 +181,10 @@ export const TotalInvestment: React.FC<z.infer<typeof totalInvestmentSchema>> = 
                             fontFamily: "Mona Sans",
                             fontWeight: 900,
                             color: "#fff",
-                            textShadow: "0 0 50px rgba(255, 230, 200, 0.3)", // Subtle warm glow
+                            textShadow: "0 0 40px rgba(0, 255, 136, 0.3)",
                             letterSpacing: -4,
                             transform: `translateY(${interpolate(frame, [0, 40], [50, 0], { easing: Easing.out(Easing.cubic) })}px)`,
-                            clipPath: `polygon(0 0, 100% 0, 100% ${interpolate(frame, [10, 50], [0, 100])}%, 0 100%)`, // Reveal effect
+                            clipPath: `polygon(0 0, 100% 0, 100% ${interpolate(frame, [10, 50], [0, 100])}%, 0 100%)`,
                         }}
                     >
                         {formattedAmount}
